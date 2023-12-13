@@ -19,3 +19,9 @@ ENV PATH /root/.local/bin:$PATH
 
 # Poetryが仮想環境を生成しないようにする
 RUN poetry config virtualenvs.create false
+
+# AWS関連のinstall
+RUN apt install nodejs -y
+RUN apt install npm -y
+RUN npm install -g serverless
+RUN pip install awscli

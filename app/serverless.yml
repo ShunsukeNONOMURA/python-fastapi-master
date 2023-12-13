@@ -1,0 +1,34 @@
+service: nonomura-sls-fastapi
+
+custom:
+  author: ${opt:author, "nonomura"}
+  stage: ${opt:stage, "dev"}
+  region: ${opt:region, "ap-northeast-1"}
+  pythonRequirements:
+    # invalidateCaches: true # キャッシュ
+    noDeploy:
+      - pytest
+
+provider:
+  name: aws
+  runtime: python3.10
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  # environment:
+  #   LOG_LEVEL: ${env:LOG_LEVEL}
+  versionFunctions: false
+  # deploymentBucket:
+  #   name: '${self:custom.deploymentBucketName}'
+  logRetentionInDays: 3 # Cloudwatchのログ保存期間日数
+
+plugins:
+  - serverless-python-requirements
+
+functions:
+  index:
+    name: ${self:custom.author}-api-${self:custom.stage}
+    handler: main.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY

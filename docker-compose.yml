@@ -8,3 +8,5 @@ services:
     volumes:
       - ./app:/root/app
     network_mode: "host"
+    env_file:
+      - .env
