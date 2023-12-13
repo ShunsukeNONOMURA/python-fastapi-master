@@ -1,0 +1,10 @@
+version: '3'
+services:
+  python:
+    build: .
+    container_name: 'python'
+    working_dir: '/root/app'
+    tty: true
+    volumes:
+      - ./app:/root/app
+    network_mode: "host"
