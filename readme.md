@@ -7,6 +7,11 @@
 | test | pytest |
 
 ```
+python db.py
+sqlite3 dev.sqlite3
+sqlite_web dev.sqlite3
+
+poetry add {lib} -D
 poetry install --no-root
 poetry run uvicorn main:app --reload
 poetry run pytest

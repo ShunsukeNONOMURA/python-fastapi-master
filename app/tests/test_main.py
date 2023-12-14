@@ -10,12 +10,12 @@ def test_get_health():
     assert response.json() == {"msg": "ok"}
 
 def test_get_user():
-    user_id = '1'
+    user_id = 'admin'
     response = client.get(
         f"/user/{user_id}"
     )
     assert response.status_code == 200
-    assert response.json() == {"user_id": user_id } 
+    assert response.json()["user_id"] == user_id
 
 def test_query_user():
     q = 'hoge'
