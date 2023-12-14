@@ -25,10 +25,17 @@ plugins:
   - serverless-python-requirements
 
 functions:
-  index:
+  api:
     name: ${self:custom.author}-api-${self:custom.stage}
-    handler: main.handler
+    handler: main.handler # mangumの位置を指定
     events:
       - http:
           path: /{proxy+}
           method: ANY
+      - schedule: 
+          rate: rate(5 minutes) # 定期実行（コールド対策） 
+          input: # health check
+            resource: "/{proxy+}"
+            path: "/health"
+            httpMethod: "GET"
+            requestContext: {}

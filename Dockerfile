@@ -11,6 +11,13 @@ ENV TERM xterm
 
 RUN pip install --upgrade pip
 
+# AWS関連のinstall
+RUN apt install nodejs -y
+RUN apt install npm -y
+RUN npm install -g serverless
+RUN npm install -g serverless-python-requirements
+RUN pip install awscli
+
 # Poetryのインストール
 RUN curl -sSL https://install.python-poetry.org | python -
 
@@ -20,8 +27,6 @@ ENV PATH /root/.local/bin:$PATH
 # Poetryが仮想環境を生成しないようにする
 RUN poetry config virtualenvs.create false
 
-# AWS関連のinstall
-RUN apt install nodejs -y
-RUN apt install npm -y
-RUN npm install -g serverless
-RUN pip install awscli
+# app/pyproject.tomlからライブラリを初回導入
+COPY app/pyproject.toml .
+RUN poetry install --no-root

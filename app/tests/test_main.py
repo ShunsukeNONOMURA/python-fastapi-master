@@ -4,18 +4,24 @@ from main import app
 
 client = TestClient(app)
 
-
-def test_read_root():
+def test_get_health():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"msg": "ok"}
 
-def test_read_item():
-    q = 'hoge'
-    item_id = 1
+def test_get_user():
+    user_id = '1'
     response = client.get(
-        f"/items/{item_id}",
+        f"/user/{user_id}"
+    )
+    assert response.status_code == 200
+    assert response.json() == {"user_id": user_id } 
+
+def test_query_user():
+    q = 'hoge'
+    response = client.get(
+        f"/query/user",
         params={"q": q},
     )
     assert response.status_code == 200
-    assert response.json() == {"item_id": item_id, 'q': q } 
+    assert response.json() == {'q': q } 

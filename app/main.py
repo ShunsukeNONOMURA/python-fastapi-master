@@ -3,12 +3,8 @@ from mangum import Mangum
 
 app = FastAPI()
 
-@app.get("/health")
-def get_health():
-    return {"msg": "ok"}
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str = None):
-    return {"item_id": item_id, "q": q}
+from views import *
+app.include_router(health_view.router)
+app.include_router(user_view.router)
 
 handler = Mangum(app)
