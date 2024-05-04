@@ -30,7 +30,9 @@ def test_create_user():
     }
     response = client.post(
         "/users",
-        params={"user": user},
+        # params={"user": user},
+        json=user,
+        headers={"Content-Type": "application/json"}
     )
     assert response.status_code == 200
 
@@ -40,3 +42,16 @@ def test_create_user():
     )
     assert response.status_code == 200
     assert response.json()["user_id"] == user_id
+
+    response = client.delete(
+        f"/users/{user_id}",
+    )
+    assert response.status_code == 200
+    # assert response.json()["user_id"] == user_ide
+
+    response = client.get(
+        f"/users/{user_id}",
+    )
+    assert response.status_code == 200
+    # assert response.json()["user_id"] == None
+

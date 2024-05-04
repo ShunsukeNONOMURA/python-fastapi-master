@@ -67,6 +67,19 @@ class User(Entity):
 
     model_config = ConfigDict(from_attributes=True)
 
+class CreateUser(BaseModel):
+    user_id: str
+    user_password: str
+    user_name: str
+    user_role_code: str
+    # class UserId(ValueObject, RootModel):
+    #     root: str
+    # class UserPassword(ValueObject, RootModel):
+    #     root: SecretStr
+    # class UserName(ValueObject, RootModel):
+    #     root: str
+    # class UserRoleCode(ValueObject, RootModel):
+    #     root : UserRoleEnum = Field(description="ユーザロール")
 
 class UserRepository:
     def find(self, user_id: str):
@@ -81,13 +94,7 @@ class UserRepository:
             return [User.model_validate(orm) for orm in users]
     def insert(self, user: User):
         with create_session() as session:
-            orm = session.query(TUser).filter(TUser.user_id == user.user_id.root).first()
-            user = TUser(
-                user_id = "guest",
-                user_name = "guest",
-                user_password = "guest",
-                user_role_code = "99",
-            )
+            orm = TUser(**user.dict())
             session.add(orm)
             session.commit()
     def delete(self, user: User):
@@ -110,7 +117,8 @@ def query_user(q: str = ""):
     return {"q": q}
 
 @router.post("/users", tags=["user"])
-def create_user(user: User):
+def create_user(user: CreateUser):
+    print(user)
     # user = User.model_validate(
     #     user
     # )
