@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException
-router = APIRouter()
-
-from pydantic import validator, SecretStr, BaseModel, RootModel, Field, ConfigDict
-from datetime import datetime, timedelta, date
-from typing import List, Optional, Any, Union
-from enum import Enum, IntEnum, unique
-from abc import ABCMeta, abstractmethod
 import json
+from abc import ABCMeta, abstractmethod
+from datetime import datetime
+from enum import Enum, unique
+
+from fastapi import APIRouter
+from pydantic import BaseModel, ConfigDict, Field, RootModel, SecretStr
+
+from db import TUser, VUser, create_session
+
+router = APIRouter()
 
 class DDDModel(BaseModel, metaclass=ABCMeta):
     def to_json(self):
@@ -23,17 +25,18 @@ class Entity(DDDModel, metaclass=ABCMeta):
         raise NotImplementedError
 
     # IDで比較するロジック
-    def __eq__(self, other):
-        if other is None or type(self) != type(other): return False # isinstance(other, Entity)を除去
+    def __eq__(self, other: DDDModel)->bool:
+        if other is None or type(self) != type(other):
+            return False # isinstance(other, Entity)を除去
         return self._id() == other._id()
-    def __ne__(self, other):
+    def __ne__(self, other: DDDModel)->bool:
         return not self.__eq__(other)
 
 @unique
 class UserRoleEnum(Enum):
-    Admin = '00'
-    General = '10'
-    Guest = '99'
+    Admin = "00"
+    General = "10"
+    Guest = "99"
 
 class User(Entity):
     class UserId(ValueObject, RootModel):
@@ -50,7 +53,7 @@ class User(Entity):
         root: datetime
     class UserUpdateDatetime(ValueObject, RootModel):
         root: datetime
-    
+
     user_id: UserId
     user_password: UserPassword
     user_name: UserName
@@ -61,11 +64,11 @@ class User(Entity):
 
     def _id(self):
         return self.user_id
-    
+
     model_config = ConfigDict(from_attributes=True)
 
-from db import TUser, VUser, create_session
-class UserRepository():
+
+class UserRepository:
     def find(self, user_id: str):
         with create_session() as session:
             orm = session.query(VUser).filter(VUser.user_id == user_id).first()
@@ -80,19 +83,19 @@ class UserRepository():
         with create_session() as session:
             orm = session.query(TUser).filter(TUser.user_id == user.user_id.root).first()
             user = TUser(
-                user_id = 'guest',
-                user_name = 'guest',
-                user_password = 'guest',
-                user_role_code = '99'
+                user_id = "guest",
+                user_name = "guest",
+                user_password = "guest",
+                user_role_code = "99",
             )
             session.add(orm)
             session.commit()
-    def delete(self, user):
+    def delete(self, user: User):
         with create_session() as session:
             orm = session.query(TUser).filter(TUser.user_id == user.user_id.root).first()
             session.delete(orm)
             session.commit()
-        
+
 @router.get("/users/{user_id}", tags=["user"])
 def get_user(user_id: str):
     user_repository = UserRepository()
@@ -100,14 +103,14 @@ def get_user(user_id: str):
     return user
 
 @router.get("/query/users", tags=["user"])
-def query_user(q: str = None):
+def query_user(q: str = ""):
     user_repository = UserRepository()
     users = user_repository.query()
     return users
     return {"q": q}
 
 @router.post("/users", tags=["user"])
-def create_user(user):
+def create_user(user: User):
     # user = User.model_validate(
     #     user
     # )

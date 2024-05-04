@@ -1,27 +1,30 @@
-from sqlalchemy import Boolean, Column, Integer, String, DATETIME, ForeignKey, create_engine, select, func
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from sqlalchemy_utils import create_view
+"""このモジュールの説明
+"""
+from contextlib import contextmanager
 from datetime import datetime
+
+from sqlalchemy import DATETIME, Column, ForeignKey, String, create_engine, select
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy_utils import create_view
 
 SQLALCHEMY_DATABASE_URI = "sqlite:///./dev.sqlite3"
 # SQLALCHEMY_DATABASE_URI = "postgresql://user:password@postgresserver/db"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URI, 
-    connect_args={"check_same_thread": False}, 
-    echo=True
+    SQLALCHEMY_DATABASE_URI,
+    connect_args={"check_same_thread": False},
+    echo=True,
 )
 # DB接続用のセッションクラス インスタンスが作成されると接続する
 SessionLocal = sessionmaker(
-    bind=engine, 
-    autocommit=False, 
-    autoflush=False
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
 )
 
 Base = declarative_base()
 
 # DB接続のセッションを各エンドポイントの関数に渡す
-from contextlib import contextmanager
 @contextmanager
 def create_session():
     session = SessionLocal()  # def __enter__
@@ -42,25 +45,25 @@ table_args = {}
 # Userテーブルの定義
 class TUser(Base):
     __table_args__ = table_args
-    __tablename__ = 't_user'
-    user_id = Column(String(20), primary_key = True, comment='ユーザID')
+    __tablename__ = "t_user"
+    user_id = Column(String(20), primary_key = True, comment="ユーザID")
     user_name = Column(String(20), nullable=False)
     user_password = Column(String(20), nullable=False)
     user_creation_datetime = Column(DATETIME, default=datetime.now, nullable=False)
     user_update_datetime = Column(DATETIME, default=datetime.now, nullable=False)
-    user_role_code = Column(String(2), ForeignKey('m_user_role.user_role_code'), nullable=False)
-    
+    user_role_code = Column(String(2), ForeignKey("m_user_role.user_role_code"), nullable=False)
+
 # Userロールの定義
 class MUserRole(Base):
     __table_args__ = table_args
-    __tablename__ = 'm_user_role'
+    __tablename__ = "m_user_role"
     user_role_code = Column(String(2), primary_key = True)
     user_role_name = Column(String(20), nullable=False)
-    user = relationship('TUser')
+    user = relationship("TUser")
 
 class VUser(Base):
     __table__ = create_view(
-        'v_user', 
+        "v_user",
         select(
             TUser.user_id,
             TUser.user_name,
@@ -68,7 +71,7 @@ class VUser(Base):
             TUser.user_creation_datetime,
             TUser.user_update_datetime,
             TUser.user_role_code,
-            MUserRole.user_role_name
+            MUserRole.user_role_name,
         ).select_from(TUser.__table__.outerjoin(MUserRole, MUserRole.user_role_code == TUser.user_role_code)),
         metadata = Base.metadata,
         cascade_on_drop=False,
@@ -76,32 +79,32 @@ class VUser(Base):
     )
 
 # RDBの初期化
-def init_db(drop_all=True):
+def init_db(drop_all: bool=True) -> None:
     if drop_all:
         Base.metadata.drop_all(engine)
     Base.metadata.create_all(bind=engine)
 
     with create_session() as session:
-        user_role = MUserRole(user_role_code='00', user_role_name='admin')
+        user_role = MUserRole(user_role_code="00", user_role_name="admin")
         session.add(user_role)
-        user_role = MUserRole(user_role_code='99', user_role_name='guest')
+        user_role = MUserRole(user_role_code="99", user_role_name="guest")
         session.add(user_role)
         user = TUser(
-            user_id = 'admin',
-            user_name = 'admin',
-            user_password = 'admin',
-            user_role_code = '00'
+            user_id = "admin",
+            user_name = "admin",
+            user_password = "admin",
+            user_role_code = "00",
         )
         session.add(user)
         user = TUser(
-            user_id = 'guest',
-            user_name = 'guest',
-            user_password = 'guest',
-            user_role_code = '99'
+            user_id = "guest",
+            user_name = "guest",
+            user_password = "guest",
+            user_role_code = "99",
         )
         session.add(user)
         session.commit()
 
 # テーブル作成
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_db()

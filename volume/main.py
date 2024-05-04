@@ -17,10 +17,10 @@ handler = Mangum(app)
 #     # if event.get("resource") != '/{proxy+}':
 #     #     # proxy+ 由来ではない場合何もしない
 #     #     return
-    
+
 #     # default
 #     asgi_handler = Mangum(app)
 #     response = asgi_handler(event, context) # Call the instance with the event arguments
-    
+
 #     return response
 # handler = handler_debug
