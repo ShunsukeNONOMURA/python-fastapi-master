@@ -28,6 +28,12 @@ def test_create_user():
         "user_password": "test",
         "user_role_code": "99",
     }
+    user = {
+        "userId": "test",
+        "userName": "test",
+        "userPassword": "test",
+        "userRoleCode": "99",
+    }
     response = client.post(
         "/users",
         # params={"user": user},
@@ -36,7 +42,7 @@ def test_create_user():
     )
     assert response.status_code == 200
 
-    user_id = user["user_id"]
+    user_id = user["userId"]
     response = client.get(
         f"/users/{user_id}",
     )
