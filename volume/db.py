@@ -48,13 +48,13 @@ class TUser(Base):
     user_password = Column(String(20), nullable=False)
     user_creation_datetime = Column(DATETIME, default=datetime.now, nullable=False)
     user_update_datetime = Column(DATETIME, default=datetime.now, nullable=False)
-    user_role_cd = Column(String(2), ForeignKey('m_user_role.user_role_cd'), nullable=False)
+    user_role_code = Column(String(2), ForeignKey('m_user_role.user_role_code'), nullable=False)
     
 # Userロールの定義
 class MUserRole(Base):
     __table_args__ = table_args
     __tablename__ = 'm_user_role'
-    user_role_cd = Column(String(2), primary_key = True)
+    user_role_code = Column(String(2), primary_key = True)
     user_role_name = Column(String(20), nullable=False)
     user = relationship('TUser')
 
@@ -67,28 +67,41 @@ class VUser(Base):
             TUser.user_password,
             TUser.user_creation_datetime,
             TUser.user_update_datetime,
-            TUser.user_role_cd,
+            TUser.user_role_code,
             MUserRole.user_role_name
-        ).select_from(TUser.__table__.outerjoin(MUserRole, MUserRole.user_role_cd == TUser.user_role_cd)),
+        ).select_from(TUser.__table__.outerjoin(MUserRole, MUserRole.user_role_code == TUser.user_role_code)),
         metadata = Base.metadata,
-        # cascade_on_drop=True,
+        cascade_on_drop=False,
         # replace = True
     )
 
-# テーブル作成
-if __name__ == '__main__':
+# RDBの初期化
+def init_db(drop_all=True):
+    if drop_all:
+        Base.metadata.drop_all(engine)
     Base.metadata.create_all(bind=engine)
-    # 初期構築
+
     with create_session() as session:
-        user_role = MUserRole(user_role_cd='00', user_role_name='admin')
+        user_role = MUserRole(user_role_code='00', user_role_name='admin')
         session.add(user_role)
-        user_role = MUserRole(user_role_cd='99', user_role_name='guest')
+        user_role = MUserRole(user_role_code='99', user_role_name='guest')
         session.add(user_role)
         user = TUser(
             user_id = 'admin',
             user_name = 'admin',
             user_password = 'admin',
-            user_role_cd = '00'
+            user_role_code = '00'
+        )
+        session.add(user)
+        user = TUser(
+            user_id = 'guest',
+            user_name = 'guest',
+            user_password = 'guest',
+            user_role_code = '99'
         )
         session.add(user)
         session.commit()
+
+# テーブル作成
+if __name__ == '__main__':
+    init_db()

@@ -2,11 +2,10 @@ version: '3'
 services:
   python:
     build: .
-    container_name: 'python'
-    working_dir: '/root/app'
+    working_dir: '/root/volume'
     tty: true
     volumes:
-      - ./app:/root/app
+      - ./volume:/root/volume
     network_mode: "host"
     env_file:
       - .env

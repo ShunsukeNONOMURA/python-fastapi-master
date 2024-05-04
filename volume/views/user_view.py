@@ -42,7 +42,7 @@ class User(Entity):
         root: SecretStr
     class UserName(ValueObject, RootModel):
         root: str
-    class UserRoleCd(ValueObject, RootModel):
+    class UserRoleCode(ValueObject, RootModel):
         root : UserRoleEnum = Field(description="ユーザロール")
     class UserRoleName(ValueObject, RootModel):
         root : str
@@ -54,7 +54,7 @@ class User(Entity):
     user_id: UserId
     user_password: UserPassword
     user_name: UserName
-    user_role_cd: UserRoleCd
+    user_role_code: UserRoleCode
     user_role_name: UserRoleName
     user_creation_datetime: UserCreationDatetime
     user_update_datetime: UserUpdateDatetime
@@ -70,15 +70,54 @@ class UserRepository():
         with create_session() as session:
             orm = session.query(VUser).filter(VUser.user_id == user_id).first()
             # orm = session.query(TUser).filter(TUser.user_id == user_id).first()
-            print(orm)
             return User.model_validate(orm) if orm is not None else None
+    def query(self):
+        with create_session() as session:
+            users = session.query(VUser).all()
+            # return users
+            return [User.model_validate(orm) for orm in users]
+    def insert(self, user: User):
+        with create_session() as session:
+            orm = session.query(TUser).filter(TUser.user_id == user.user_id.root).first()
+            user = TUser(
+                user_id = 'guest',
+                user_name = 'guest',
+                user_password = 'guest',
+                user_role_code = '99'
+            )
+            session.add(orm)
+            session.commit()
+    def delete(self, user):
+        with create_session() as session:
+            orm = session.query(TUser).filter(TUser.user_id == user.user_id.root).first()
+            session.delete(orm)
+            session.commit()
         
-@router.get("/user/{user_id}", tags=["user"])
+@router.get("/users/{user_id}", tags=["user"])
 def get_user(user_id: str):
     user_repository = UserRepository()
     user = user_repository.find(user_id)
     return user
 
-@router.get("/query/user", tags=["user"])
+@router.get("/query/users", tags=["user"])
 def query_user(q: str = None):
+    user_repository = UserRepository()
+    users = user_repository.query()
+    return users
     return {"q": q}
+
+@router.post("/users", tags=["user"])
+def create_user(user):
+    # user = User.model_validate(
+    #     user
+    # )
+    user_repository = UserRepository()
+    user = user_repository.insert(user)
+    return user
+
+@router.delete("/users/{user_id}", tags=["user"])
+def delete_user(user_id: str):
+    user_repository = UserRepository()
+    user = user_repository.find(user_id)
+    user = user_repository.delete(user)
+    return user

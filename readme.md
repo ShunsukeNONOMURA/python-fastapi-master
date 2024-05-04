@@ -1,38 +1,32 @@
 
-| 基本機能 | ライブラリ |
-| - | - |
-| API | fastapi |
-| lambda | sls |
-| doc | fastapi |
-| test | pytest |
+# 概要
+fastapiの開発環境ベースコード
 
-```
-python db.py
-sqlite3 dev.sqlite3
-sqlite_web dev.sqlite3
-
-poetry add {lib} -D
-poetry install --no-root
-poetry run uvicorn main:app --reload
-poetry run pytest
-poetry run pytest --cov=.
-poetry run pytest --cov=. -v --cov-report=html
-
-# local実行
-sls invoke local -f {function} --path {params.json}
-sls invoke local -f api --path invoke.json
-
-# デプロイ
-sls deploy
-
-# デプロイ一覧
-sls deploy list --stage {env}
-
-# 切り戻し (切り戻ししたときの元のものは消えない)
-sls rollback --timestamp {timestamp} --stage {env}
-
-# 全削除
-sls remove --stage {env}
-```
+| 基本機能 | ライブラリ  |
+| -------- | ----------- |
+| API      | fastapi     |
+| test     | pytest      |
+| doc      | fastapi     |
+| lambda   | mangum, sls |
 
 - [DockerでPoetryを使って環境構築しよう](https://book.st-hakky.com/hakky/try-poetry-on-docker/)
+
+# todo
+- log
+- docs
+    - ddl / orm
+        - schemaspy
+    - class
+- env
+    - local dev
+    - remote serverless
+- release
+    - mangum
+
+## 基本構成
+```
+
+```
+
+# 参考
+- [PythonでDDDやってみた](https://techtekt.persol-career.co.jp/entry/tech/231220_02)
