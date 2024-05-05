@@ -21,7 +21,7 @@ def test_query_user():
     assert response.status_code == 200
     # assert response.json() == {'q': q }
 
-def test_create_user():
+def test_user():
     user = {
         "user_id": "test",
         "user_name": "test",
