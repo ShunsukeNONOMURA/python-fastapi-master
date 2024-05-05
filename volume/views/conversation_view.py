@@ -86,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     "message_token": message_token,
                 }
                 response_text = json.dumps(json_data)
-                await websocket.send_text(response_text)
+                # await manager.send_personal_message(response_text, websocket)
                 await manager.broadcast(response_text) # 全体通知
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -172,7 +172,8 @@ html_ws="""
             socket.addEventListener("message", (event) => {
               const data = JSON.parse(event.data);
               console.log(data)
-              output.innerHTML += event.data;
+              output.innerHTML += JSON.stringify(data)
+              //output.innerHTML += event.data;
             });
 
             socket.addEventListener("close", (event) => {
@@ -182,7 +183,7 @@ html_ws="""
           } else {
             const message = input.value;
             if (message) {
-              console.log(message)
+              // console.log(message)
               socket.send(message);
               input.value = "";
             }
