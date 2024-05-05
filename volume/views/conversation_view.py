@@ -2,9 +2,11 @@ from typing import Any
 from pydantic import BaseModel
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse, HTMLResponse
+from sse_starlette.sse import EventSourceResponse
 import asyncio
 from typing import List
 import json
+import uuid
 
 router = APIRouter()
 
@@ -28,9 +30,19 @@ class StreamRequest(BaseModel):
     message: str
 
 async def send_token(query: str):
-    for token in query:
-        yield token
+    message_id = str(uuid.uuid4())
+    message = ""
+    for chank in query:
+        message += chank
+        json_data = {
+            "message_id": message_id,
+            "message": message,
+        }
+        # response_text = json.dumps(json_data)
+        # yield f"data:{response_text}\n\n"
+        yield {"data": json_data}
         await asyncio.sleep(0.5)
+    yield {"data": "[DONE]"}
 
 # async def send_token_openai(query: str):
 #     response = openai.ChatCompletion.create(
@@ -45,10 +57,9 @@ async def send_token(query: str):
 #         yield chunk_message
 
 @router.post("/streaming")
-async def streaming_endpoint(request: StreamRequest) -> StreamingResponse:
-    return StreamingResponse(
+async def streaming_endpoint(request: StreamRequest) -> EventSourceResponse:
+    return EventSourceResponse(
         send_token(request.message),
-        media_type="text/event-stream",
     )
 
 # ws ######################################################3
@@ -79,13 +90,13 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            message_id = 'hoge'
+            message_id = str(uuid.uuid4())
             async for message_token in send_token(data):
-                json_data = {
-                    "message_id": message_id,
-                    "message_token": message_token,
-                }
-                response_text = json.dumps(json_data)
+                # json_data = {
+                #     "message_id": message_id,
+                #     "message_token": message_token,
+                # }
+                response_text = json.dumps(message_token)
                 # await manager.send_personal_message(response_text, websocket)
                 await manager.broadcast(response_text) # 全体通知
     except WebSocketDisconnect:
@@ -118,6 +129,7 @@ html="""
             while (true) {
                 const { value, done: doneReading } = await reader.read();
                 done = doneReading;
+                // JSON.parse(value);
                 const chunkValue = decoder.decode(value);
 
                 // result += chunkValue;
@@ -133,7 +145,7 @@ html="""
     </script>
   </head>
   <body>
-    <h1>Simple Chatbot</h1>
+    <h1>Streaming Chatbot</h1>
     <input
       id="input"
       type="text"
@@ -199,7 +211,7 @@ html_ws="""
     </script>
   </head>
   <body>
-    <h1>Simple Chatbot</h1>
+    <h1>WS Chatbot</h1>
     <input
       id="input"
       type="text"
