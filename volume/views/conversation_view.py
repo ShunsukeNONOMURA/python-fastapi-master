@@ -1,12 +1,11 @@
-from typing import Any
-from pydantic import BaseModel
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse, HTMLResponse
-from sse_starlette.sse import EventSourceResponse
 import asyncio
-from typing import List
 import json
 import uuid
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
 router = APIRouter()
 
@@ -64,8 +63,8 @@ async def streaming_endpoint(request: StreamRequest) -> EventSourceResponse:
 
 # ws ######################################################3
 class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
+    def __init__(self) -> None:
+        self.active_connections: list[WebSocket] = [] # websocket登録状態
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -86,11 +85,11 @@ manager = ConnectionManager()
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
-    username = 'dammy'
+    username = "dammy"
     try:
         while True:
             data = await websocket.receive_text()
-            message_id = str(uuid.uuid4())
+            # message_id = str(uuid.uuid4())
             async for message_token in send_token(data):
                 # json_data = {
                 #     "message_id": message_id,
@@ -99,6 +98,10 @@ async def websocket_endpoint(websocket: WebSocket):
                 response_text = json.dumps(message_token)
                 # await manager.send_personal_message(response_text, websocket)
                 await manager.broadcast(response_text) # 全体通知
+            # await websocket.close()
+            manager.disconnect(websocket)
+            await websocket.close()
+            break
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{username} left the chat") # 全体通知
@@ -175,7 +178,7 @@ html_ws="""
         button.addEventListener("click", () => {
           if (!socket || socket.readyState !== WebSocket.OPEN) {
             socket = new WebSocket("ws://localhost:8000/ws");
-            
+
             socket.addEventListener("open", (event) => {
               output.innerHTML += "<p>Connected to WebSocket server.</p>";
               button.textContent = "Send";
@@ -225,9 +228,9 @@ html_ws="""
 """
 
 @router.get("/page/stream")
-async def get():
+async def get_page_stream():
     return HTMLResponse(html)
 
 @router.get("/page/ws")
-async def get():
+async def get_page_ws():
     return HTMLResponse(html_ws)
