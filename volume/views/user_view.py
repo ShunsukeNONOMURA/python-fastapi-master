@@ -112,7 +112,7 @@ class UserRepository:
             return [User.model_validate(orm) for orm in users]
     def insert(self, user: User):
         with create_session() as session:
-            orm = TUser(**user.dict())
+            orm = TUser(**user.model_dump())
             session.add(orm)
             session.commit()
     def delete(self, user: User):
